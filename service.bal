@@ -1,17 +1,59 @@
+import ballerinax/mysql;
+import ballerinax/mysql.driver as _;
 import ballerina/http;
+import ballerina/sql;
+import ballerina/log;
+
+type isValid record {
+    boolean valid;
+    string nic;
+};
+
+type Person record {
+    string nic;
+    @sql:Column{name:"firstname"}
+    string firstName;
+    @sql:Column{name:"lastname"}
+    string lastName;
+
+};
+
+configurable string database = ?;
+
+configurable string username = ?;
+
+configurable string host = ?;
+
+configurable int port = ?;
+
+configurable string password = ?;
+
+mysql:Client mysqlEp = check new (host = host, user = username, database = database, port=port, password=password);
 
 # A service representing a network-accessible API
 # bound to port `9090`.
 service / on new http:Listener(9090) {
 
-    # A resource for generating greetings
-    # + name - the input string name
-    # + return - string name with hello message or error
-    resource function get greeting(string name) returns string|error {
-        // Send a response back to the caller.
-        if name is "" {
-            return error("name should not be empty!");
+    resource function get checkNic/[string nic]() returns isValid|error? {
+
+        Person|error queryRowResponse=mysqlEp->queryRow(`select * from nic_details where nic=${nic.trim()}`);
+
+        if queryRowResponse is error{
+            isValid result={
+                valid: false,
+                nic:nic
+            };
+            log:printInfo("Returned the error");
+            return result;
+        }else{
+            isValid result={
+                valid: true,
+                nic:nic
+            };
+            log:printInfo(result.toBalString());
+            return result;
         }
-        return "Hello, " + name;
+
     }
 }
+
