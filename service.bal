@@ -11,7 +11,7 @@ type isValid record {
 
 type Person record {
     string nic;
-    @sql:Column{name:"firstname"}
+    @sql:Column{name:"firstname"}   
     string firstName;
     @sql:Column{name:"lastname"}
     string lastName;
@@ -28,13 +28,11 @@ configurable int port = ?;
 
 configurable string password = ?;
 
-mysql:Client mysqlEp = check new (host = host, user = username, database = database, port=port, password=password);
+final mysql:Client mysqlEp = check new (host = host, user = username, database = database, port=port, password=password);
 
-# A service representing a network-accessible API
-# bound to port `9090`.
 service / on new http:Listener(9090) {
 
-    resource function get checkNic/[string nic]() returns isValid|error? {
+    isolated resource function get checkNic/[string nic]() returns isValid|error? {
 
         Person|error queryRowResponse=mysqlEp->queryRow(`select * from nic_details where nic=${nic.trim()}`);
 
