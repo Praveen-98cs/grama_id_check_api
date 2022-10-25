@@ -3,6 +3,7 @@ import ballerinax/mysql.driver as _;
 import ballerina/http;
 import ballerina/sql;
 import ballerina/log;
+import ballerina/io;
 
 type isValid record {
     boolean valid;
@@ -35,13 +36,14 @@ service / on new http:Listener(9090) {
     isolated resource function get checkNic/[string nic]() returns isValid|error? {
 
         Person|error queryRowResponse=mysqlEp->queryRow(`select * from nic_details where nic=${nic.trim()}`);
+        io:println(queryRowResponse);
 
         if queryRowResponse is error{
             isValid result={
                 valid: false,
                 nic:nic
             };
-            log:printInfo("Entered NIC is Invalid");
+            log:printInfo("Entered NIC is Invalid: ");
             return result;        }else{
             isValid result={
                 valid: true,
